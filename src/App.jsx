@@ -13,24 +13,23 @@ import { HiOutlineMail } from 'react-icons/hi'
 
 import logo from './assets/logo_mika.jpg'
 import image0 from './assets/image.png'
-import image1 from './assets/image1.png'
-import image2 from './assets/image2.png'
-import image3 from './assets/image3.png'
-import image4 from './assets/image4.png'
-import image5 from './assets/image5.png'
-import image6 from './assets/image6.png'
+import prod1 from '../assets/prod1.jpeg'
+import prod2 from '../assets/prod2.jpeg'
+import prod3 from '../assets/prod3.jpeg'
+import prod4 from '../assets/prod4.jpeg'
+import prod5 from '../assets/prod5.jpeg'
+import prod6 from '../assets/prod6.jpeg'
 
 const instagramUrl = 'https://www.instagram.com/queenbags_mika/?hl=fr'
 const whatsappUrl = 'https://wa.me/21629043226'
 
 const products = [
-  { id: 1, image: image0, price: '145 TND' },
-  { id: 2, image: image1, price: '125 TND' },
-  { id: 3, image: image2, price: '159 TND' },
-  { id: 4, image: image3, price: '138 TND' },
-  { id: 5, image: image4, price: '149 TND' },
-  { id: 6, image: image5, price: '132 TND' },
-  { id: 7, image: image6, price: '169 TND' },
+  { id: 1, image: prod1, price: '145 TND' },
+  { id: 2, image: prod2, price: '125 TND' },
+  { id: 3, image: prod3, price: '159 TND' },
+  { id: 4, image: prod4, price: '138 TND' },
+  { id: 5, image: prod5, price: '149 TND' },
+  { id: 6, image: prod6, price: '132 TND' },
 ]
 
 const content = {

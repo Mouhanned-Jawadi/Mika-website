@@ -4,6 +4,5 @@
   "installCommand": "npm install",
   "framework": "vite",
   "outputDirectory": "dist",
-  "env": {},
-  "regions": ["bur"]
+  "env": {}
 }
