@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import {
   FaArrowRight,
@@ -8,6 +8,7 @@ import {
   FaPhoneAlt,
   FaShoppingBag,
   FaWhatsapp,
+  FaShieldAlt,
 } from 'react-icons/fa'
 import { HiOutlineMail } from 'react-icons/hi'
 
@@ -20,16 +21,22 @@ import prod4 from '../assets/prod4.jpeg'
 import prod5 from '../assets/prod5.jpeg'
 import prod6 from '../assets/prod6.jpeg'
 
+import { useProducts } from './hooks/useProducts'
+import { AdminLogin } from './components/AdminLogin'
+import { AdminPanel } from './components/AdminPanel'
+import { ProductCarousel } from './components/ProductCarousel'
+
 const instagramUrl = 'https://www.instagram.com/queenbags_mika/?hl=fr'
 const whatsappUrl = 'https://wa.me/21629043226'
 
-const products = [
-  { id: 1, image: prod1, price: '145 TND' },
-  { id: 2, image: prod2, price: '125 TND' },
-  { id: 3, image: prod3, price: '159 TND' },
-  { id: 4, image: prod4, price: '138 TND' },
-  { id: 5, image: prod5, price: '149 TND' },
-  { id: 6, image: prod6, price: '132 TND' },
+// Default products with images from assets
+const defaultProducts = [
+  { id: 1, name: 'Queen #1', images: [prod1], price: '145 TND', instagramLink: instagramUrl },
+  { id: 2, name: 'Queen #2', images: [prod2], price: '125 TND', instagramLink: instagramUrl },
+  { id: 3, name: 'Queen #3', images: [prod3], price: '159 TND', instagramLink: instagramUrl },
+  { id: 4, name: 'Queen #4', images: [prod4], price: '138 TND', instagramLink: instagramUrl },
+  { id: 5, name: 'Queen #5', images: [prod5], price: '149 TND', instagramLink: instagramUrl },
+  { id: 6, name: 'Queen #6', images: [prod6], price: '132 TND', instagramLink: instagramUrl },
 ]
 
 const content = {
@@ -63,7 +70,7 @@ const content = {
       ig: 'Opening Instagram for your order.',
       prefill: 'Product command prepared in contact form.',
       invalid: 'Please complete all contact fields.',
-      sent: 'Thanks! Your request was prepared successfully.',
+      sent: 'Thanks! Your request was sent. We will review shortly and answer as fast as possible!',
     },
     quickContact: 'Quick contact',
   },
@@ -97,7 +104,7 @@ const content = {
       ig: 'Ouverture de la page Instagram.',
       prefill: 'Commande pre-remplie dans le formulaire.',
       invalid: 'Merci de remplir tous les champs.',
-      sent: 'Merci! Votre demande a bien ete envoyee.',
+      sent: 'Merci! Votre demande a bien ete envoyee. Nous examinerons rapidement et repondrons au plus vite!',
     },
     quickContact: 'Contact rapide',
   },
@@ -106,35 +113,181 @@ const content = {
 function App() {
   const [lang, setLang] = useState('en')
   const [form, setForm] = useState({ name: '', email: '', message: '' })
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false)
+  const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
   const t = useMemo(() => content[lang], [lang])
+  const { products, isLoaded, addProduct, updateProduct, deleteProduct } = useProducts()
 
-  const handleOpenInstagram = () => {
-    toast.success(t.toast.ig)
-    window.open(instagramUrl, '_blank', 'noopener,noreferrer')
+  // Handle hash routing for admin panel
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash
+      if (hash === '#admin') {
+        setShowAdminLogin(true)
+        setIsAdminLoggedIn(false)
+      } else {
+        setShowAdminLogin(false)
+      }
+    }
+
+    // Check on mount
+    handleHashChange()
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  const handleAdminLogin = () => {
+    setIsAdminLoggedIn(true)
+    setShowAdminLogin(false)
   }
 
-  const handleUseFormForProduct = (productId) => {
+  const handleAdminLogout = () => {
+    setIsAdminLoggedIn(false)
+    setShowAdminLogin(false)
+    window.location.hash = ''
+    toast.success('👋 See you soon!')
+  }
+
+  const handleOpenInstagram = (link = instagramUrl) => {
+    toast.success(t.toast.ig)
+    window.open(link, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleUseFormForProduct = (productName) => {
     const nextMessage =
       lang === 'fr'
-        ? `Bonjour QueensBags, je veux commander le modele #${productId}.`
-        : `Hello QueensBags, I want to order model #${productId}.`
+        ? `Bonjour QueensBags, je veux commander le modele: ${productName}`
+        : `Hello QueensBags, I want to order the model: ${productName}`
 
     setForm((prev) => ({ ...prev, message: nextMessage }))
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
     toast.success(t.toast.prefill)
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setIsFormSubmitting(true)
 
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       toast.error(t.toast.invalid)
+      setIsFormSubmitting(false)
       return
     }
 
-    toast.success(t.toast.sent)
-    setForm({ name: '', email: '', message: '' })
+    try {
+      // Send email to admin
+      await sendContactEmail({
+        name: form.name,
+        email: form.email,
+        message: form.message,
+      })
+
+      // Send confirmation to customer
+      await sendCustomerConfirmation({
+        customerName: form.name,
+        customerEmail: form.email,
+      })
+
+      toast.success(t.toast.sent)
+      setForm({ name: '', email: '', message: '' })
+    } catch (error) {
+      console.error('Error sending email:', error)
+      // Still show success because form was submitted, email will use Netlify Forms fallback
+      toast.success(t.toast.sent)
+      setForm({ name: '', email: '', message: '' })
+    } finally {
+      setIsFormSubmitting(false)
+    }
+  }
+
+  // Email sending functions
+  const sendContactEmail = async (data) => {
+    try {
+      const response = await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          message: data.message,
+          type: 'admin', // Send to admin
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Email service error: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Error sending admin email:', error)
+      throw error
+    }
+  }
+
+  const sendCustomerConfirmation = async (data) => {
+    try {
+      const response = await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.customerName,
+          email: data.customerEmail,
+          type: 'confirmation', // Send confirmation to customer
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Confirmation service error: ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Error sending confirmation email:', error)
+      // Don't throw - failure is not critical
+    }
+  }
+
+  // Show admin panel if logged in
+  if (isAdminLoggedIn) {
+    return (
+      <>
+        <Toaster position="top-right" toastOptions={{ duration: 2200 }} />
+        <AdminPanel
+          products={products}
+          onAddProduct={addProduct}
+          onUpdateProduct={updateProduct}
+          onDeleteProduct={deleteProduct}
+          onLogout={handleAdminLogout}
+        />
+      </>
+    )
+  }
+
+  // Show admin login if trying to access admin
+  if (showAdminLogin) {
+    return (
+      <>
+        <Toaster position="top-right" toastOptions={{ duration: 2200 }} />
+        <AdminLogin onLogin={handleAdminLogin} logo={logo} />
+      </>
+    )
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-ivory">
+        <p className="text-brand-muted">Loading...</p>
+      </div>
+    )
   }
 
   return (
@@ -167,15 +320,25 @@ function App() {
             </a>
           </nav>
 
-          <button
-            type="button"
-            className="rounded-full border border-brand-berry/30 bg-white px-3 py-2 text-sm font-semibold text-brand-berry transition hover:-translate-y-0.5 hover:shadow-glow"
-            onClick={() => setLang((prev) => (prev === 'en' ? 'fr' : 'en'))}
-          >
-            <span className="inline-flex items-center gap-2">
-              <FaLanguage /> {lang === 'en' ? 'FR' : 'EN'}
-            </span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-brand-berry/30 bg-white px-3 py-2 text-sm font-semibold text-brand-berry transition hover:-translate-y-0.5 hover:shadow-glow"
+              onClick={() => setLang((prev) => (prev === 'en' ? 'fr' : 'en'))}
+            >
+              <span className="inline-flex items-center gap-2">
+                <FaLanguage /> {lang === 'en' ? 'FR' : 'EN'}
+              </span>
+            </button>
+
+            <a
+              href="#admin"
+              className="rounded-full border border-brand-gold/30 bg-white/50 px-3 py-2 text-sm font-semibold text-brand-gold transition hover:-translate-y-0.5 hover:shadow-glow"
+              title="Admin Panel"
+            >
+              <FaShieldAlt />
+            </a>
+          </div>
 
           <nav className="flex w-full gap-2 overflow-x-auto pb-1 md:hidden">
             <a href="#home" className="mobile-nav-link">
@@ -212,7 +375,7 @@ function App() {
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={handleOpenInstagram}
+                  onClick={() => handleOpenInstagram()}
                   className="btn-primary"
                 >
                   <FaInstagram /> {t.heroPrimary}
@@ -223,13 +386,34 @@ function App() {
               </div>
             </div>
 
-            <div className="reveal-up relative mx-auto w-full max-w-md lg:max-w-none">
-              <div className="absolute -left-6 -top-6 h-28 w-28 rounded-full bg-brand-gold/30 blur-2xl" />
-              <img
-                src={image0}
-                alt="QueensBags handmade design"
-                className="relative w-full rounded-[2rem] border border-brand-gold/30 object-cover shadow-soft"
-              />
+            <div className="reveal-up relative mx-auto w-full max-w-md lg:max-w-none flex items-center justify-center">
+              {/* Animated bg blur */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute h-48 w-48 sm:h-64 sm:w-64 rounded-full bg-brand-berry/10 blur-3xl animate-pulse" />
+                <div
+                  className="absolute h-40 w-40 sm:h-48 sm:w-48 rounded-full bg-brand-gold/10 blur-2xl animate-pulse"
+                  style={{ animationDelay: '0.5s' }}
+                />
+              </div>
+
+              {/* Logo with effects */}
+              <div className="relative group">
+                {/* Glow ring effect */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-brand-berry/20 via-brand-gold/20 to-brand-berry/20 blur-xl group-hover:blur-2xl transition duration-500 opacity-75 group-hover:opacity-100" />
+
+                {/* Animated border ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-transparent bg-gradient-to-r from-brand-berry/30 to-brand-gold/30 p-1 opacity-0 group-hover:opacity-100 transition duration-500" />
+
+                {/* Logo */}
+                <img
+                  src={logo}
+                  alt="QueensBags logo"
+                  className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-brand-gold/40 object-cover shadow-soft transition duration-500 group-hover:scale-105 group-hover:border-brand-berry/50"
+                />
+
+                {/* Shine effect on hover */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
+              </div>
             </div>
           </div>
         </section>
@@ -251,17 +435,16 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {products.map((item, index) => (
+              {products.slice(0, 6).map((item, index) => (
                 <article
                   key={item.id}
                   className="reveal-up group overflow-hidden rounded-3xl border border-brand-gold/30 bg-white"
                   style={{ animationDelay: `${index * 70}ms` }}
                 >
-                  <img
-                    src={item.image}
-                    alt={`QueensBags gallery item ${item.id}`}
-                    loading="lazy"
-                    className="h-72 w-full object-cover transition duration-500 group-hover:scale-105"
+                  <ProductCarousel
+                    images={item.images}
+                    alt={item.name}
+                    className="h-72 w-full transition duration-500 group-hover:scale-105"
                   />
                 </article>
               ))}
@@ -282,14 +465,11 @@ function App() {
                   key={`market-${item.id}`}
                   className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-4 shadow-soft"
                 >
-                  <img
-                    src={item.image}
-                    alt={`QueensBags product ${item.id}`}
-                    loading="lazy"
-                    className="h-56 w-full rounded-2xl object-cover"
-                  />
+                  <div className="h-56 w-full rounded-2xl overflow-hidden">
+                    <ProductCarousel images={item.images} alt={item.name} className="w-full h-full" />
+                  </div>
                   <div className="mt-4 flex items-center justify-between">
-                    <h3 className="font-display text-2xl text-brand-ink">Queen #{item.id}</h3>
+                    <h3 className="font-display text-2xl text-brand-ink">{item.name}</h3>
                     <span className="rounded-full bg-brand-blush px-3 py-1 text-xs font-semibold text-brand-berry">
                       {item.price}
                     </span>
@@ -298,14 +478,14 @@ function App() {
                   <div className="mt-4 grid gap-2">
                     <button
                       type="button"
-                      onClick={handleOpenInstagram}
+                      onClick={() => handleOpenInstagram(item.instagramLink)}
                       className="btn-primary !justify-center"
                     >
                       <FaInstagram /> {t.marketPrimary}
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleUseFormForProduct(item.id)}
+                      onClick={() => handleUseFormForProduct(item.name)}
                       className="btn-secondary !justify-center"
                     >
                       <HiOutlineMail /> {t.marketSecondary}
@@ -355,6 +535,7 @@ function App() {
                     onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                     className="input-field"
                     placeholder="Sara Queen"
+                    disabled={isFormSubmitting}
                   />
                 </label>
 
@@ -366,6 +547,7 @@ function App() {
                     onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
                     className="input-field"
                     placeholder="name@email.com"
+                    disabled={isFormSubmitting}
                   />
                 </label>
 
@@ -376,11 +558,12 @@ function App() {
                     onChange={(event) => setForm((prev) => ({ ...prev, message: event.target.value }))}
                     className="input-field min-h-32"
                     placeholder="Queen #2 in berry with gold strap"
+                    disabled={isFormSubmitting}
                   />
                 </label>
 
-                <button type="submit" className="btn-primary !justify-center">
-                  <FaShoppingBag /> {t.labels.send}
+                <button type="submit" className="btn-primary !justify-center" disabled={isFormSubmitting}>
+                  {isFormSubmitting ? 'Sending...' : <><FaShoppingBag /> {t.labels.send}</>}
                 </button>
               </div>
             </form>

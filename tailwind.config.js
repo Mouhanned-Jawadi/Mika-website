@@ -22,6 +22,12 @@ export default {
         soft: '0 18px 35px -20px rgba(143, 53, 82, 0.35)',
         glow: '0 12px 25px -12px rgba(178, 67, 102, 0.5)',
       },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      transitionDelay: {
+        '1000': '1000ms',
+      },
     },
   },
   plugins: [],
