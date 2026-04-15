@@ -16,8 +16,8 @@ const createTransporter = () => {
     port: 465,
     secure: true, // use SSL
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASS,
+      user: process.env.GMAIL_USER || 'mouhanned.jawadi23@gmail.com',
+      pass: process.env.GMAIL_PASS || 'szyi fhcx jprn eket',
     },
   })
 }
@@ -50,7 +50,7 @@ exports.handler = async (event) => {
     }
 
     const adminEmail = 'queenbags.mika@gmail.com'
-    const fromEmail = process.env.GMAIL_USER
+    const fromEmail = process.env.GMAIL_USER || 'mouhanned.jawadi23@gmail.com'
 
     let mailOptions = {}
 
