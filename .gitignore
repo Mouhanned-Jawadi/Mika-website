@@ -43,3 +43,6 @@ docker-compose.override.yml
 # IDE
 .history/
 .vimrc
+
+# Local Netlify folder
+.netlify

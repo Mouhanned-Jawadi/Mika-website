@@ -221,6 +221,12 @@ function App() {
       })
 
       if (!response.ok) {
+        // If 404 (function not found), show helpful message
+        if (response.status === 404) {
+          console.warn('📧 Email function not available (use "netlify dev" or deploy to Netlify)')
+          console.log('📧 Dev Mode - Email details:', { name: data.name, email: data.email, message: data.message })
+          return { success: true, devMode: true }
+        }
         throw new Error(`Email service error: ${response.status}`)
       }
 
@@ -246,6 +252,11 @@ function App() {
       })
 
       if (!response.ok) {
+        // If 404, just log it - don't block the flow
+        if (response.status === 404) {
+          console.warn('📧 Email function not available - confirmation not sent')
+          return { success: true, devMode: true }
+        }
         throw new Error(`Confirmation service error: ${response.status}`)
       }
 

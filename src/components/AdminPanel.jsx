@@ -11,6 +11,7 @@ export const AdminPanel = ({ products, onAddProduct, onUpdateProduct, onDeletePr
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const filteredProducts = products.filter(
     (p) =>
@@ -18,17 +19,33 @@ export const AdminPanel = ({ products, onAddProduct, onUpdateProduct, onDeletePr
       p.price.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleAddProduct = (formData) => {
-    onAddProduct(formData)
-    setShowForm(false)
-    toast.success('✅ Product added successfully!')
+  const handleAddProduct = async (formData) => {
+    try {
+      setIsSubmitting(true)
+      await onAddProduct(formData)
+      setShowForm(false)
+      toast.success('✅ Product added successfully!')
+    } catch (error) {
+      console.error('Error adding product:', error)
+      toast.error('❌ Failed to add product. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const handleUpdateProduct = (formData) => {
-    onUpdateProduct(editingProduct.id, formData)
-    setEditingProduct(null)
-    setShowForm(false)
-    toast.success('✏️ Product updated successfully!')
+  const handleUpdateProduct = async (formData) => {
+    try {
+      setIsSubmitting(true)
+      await onUpdateProduct(editingProduct.id, formData)
+      setEditingProduct(null)
+      setShowForm(false)
+      toast.success('✏️ Product updated successfully!')
+    } catch (error) {
+      console.error('Error updating product:', error)
+      toast.error('❌ Failed to update product. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleDeleteProduct = (id, productName) => {
@@ -38,11 +55,16 @@ export const AdminPanel = ({ products, onAddProduct, onUpdateProduct, onDeletePr
   const handleConfirmDelete = async () => {
     if (!deleteConfirm) return
     setIsDeleting(true)
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    onDeleteProduct(deleteConfirm.id)
-    toast.success('🗑️ Product deleted successfully!')
-    setDeleteConfirm(null)
-    setIsDeleting(false)
+    try {
+      await onDeleteProduct(deleteConfirm.id)
+      toast.success('🗑️ Product deleted successfully!')
+      setDeleteConfirm(null)
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast.error('❌ Failed to delete product. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleEditProduct = (product) => {

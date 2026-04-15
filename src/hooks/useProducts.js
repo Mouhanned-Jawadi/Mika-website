@@ -1,69 +1,199 @@
 import { useState, useCallback, useEffect } from 'react'
 
-const STORAGE_KEY = 'queenbags_products'
+// Helper to check if we're in dev mode (without netlify dev)
+const isDevelopmentMode = () => {
+  return !window.location.hostname.includes('netlify')
+}
 
-// Initial products data
-const defaultProducts = [
-  { id: 1, name: 'Queen #1', images: [], price: '145', instagramLink: 'https://www.instagram.com/p/EXAMPLE/', createdAt: Date.now() },
-  { id: 2, name: 'Queen #2', images: [], price: '125', instagramLink: 'https://www.instagram.com/p/EXAMPLE/', createdAt: Date.now() },
-  { id: 3, name: 'Queen #3', images: [], price: '159', instagramLink: 'https://www.instagram.com/p/EXAMPLE/', createdAt: Date.now() },
-  { id: 4, name: 'Queen #4', images: [], price: '138', instagramLink: 'https://www.instagram.com/p/EXAMPLE/', createdAt: Date.now() },
-  { id: 5, name: 'Queen #5', images: [], price: '149', instagramLink: 'https://www.instagram.com/p/EXAMPLE/', createdAt: Date.now() },
-  { id: 6, name: 'Queen #6', images: [], price: '132', instagramLink: 'https://www.instagram.com/p/EXAMPLE/', createdAt: Date.now() },
-]
+// Helper to save to local backup
+const saveToLocalStorage = (products) => {
+  try {
+    localStorage.setItem('queenbags_products', JSON.stringify(products))
+  } catch (e) {
+    console.warn('Could not save to localStorage:', e)
+  }
+}
+
+// Helper to load from local backup
+const loadFromLocalStorage = () => {
+  try {
+    const stored = localStorage.getItem('queenbags_products')
+    return stored ? JSON.parse(stored) : null
+  } catch (e) {
+    console.warn('Could not load from localStorage:', e)
+    return null
+  }
+}
 
 export const useProducts = () => {
   const [products, setProducts] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  // Load from localStorage on mount
-  useEffect(() => {
+  // Fetch all products from MongoDB
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        setProducts(JSON.parse(stored))
+      console.log('🌐 Fetching products from API...')
+      const response = await fetch('/.netlify/functions/get-products')
+      
+      if (!response.ok) throw new Error(`API error: ${response.status}`)
+      
+      const result = await response.json()
+      console.log('✅ Products loaded from MongoDB:', result.data?.length || 0)
+      setProducts(result.data || [])
+      saveToLocalStorage(result.data || [])
+    } catch (err) {
+      console.warn('⚠️ API fetch failed, using localStorage fallback:', err.message)
+      setError(null) // Don't show error to user, use fallback instead
+      
+      // Fallback to localStorage
+      const localProducts = loadFromLocalStorage()
+      if (localProducts) {
+        console.log('📂 Loaded products from localStorage:', localProducts.length)
+        setProducts(localProducts)
       } else {
-        setProducts(defaultProducts)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultProducts))
+        console.log('📂 No products in localStorage either')
+        setProducts([])
       }
-    } catch {
-      setProducts(defaultProducts)
+    } finally {
+      setIsLoading(false)
+      setIsLoaded(true)
     }
-    setIsLoaded(true)
   }, [])
 
-  // Save to localStorage whenever products change
-  const saveProducts = useCallback((updatedProducts) => {
-    setProducts(updatedProducts)
+  // Load products on mount
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
+
+  const addProduct = useCallback(async (productData) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProducts))
-    } catch (error) {
-      console.error('Failed to save products:', error)
+      setError(null)
+      console.log('📤 Adding product:', productData.name)
+      
+      const response = await fetch('/.netlify/functions/add-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      })
+
+      console.log('📬 Response status:', response.status)
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('✅ Product saved to MongoDB')
+        const newProduct = result.data
+        
+        setProducts((prev) => {
+          const updated = [newProduct, ...prev]
+          saveToLocalStorage(updated)
+          return updated
+        })
+        
+        return newProduct
+      } else {
+        throw new Error(`API error: ${response.status}`)
+      }
+    } catch (err) {
+      console.warn('⚠️ MongoDB save failed, using localStorage:', err.message)
+      
+      // Fallback: save to localStorage instead
+      const newProduct = {
+        id: Date.now().toString(),
+        ...productData,
+        createdAt: new Date().toISOString(),
+      }
+      
+      setProducts((prev) => {
+        const updated = [newProduct, ...prev]
+        saveToLocalStorage(updated)
+        return updated
+      })
+      
+      console.log('📂 Product saved to localStorage:', newProduct.id)
+      return newProduct
     }
   }, [])
 
-  const addProduct = useCallback((productData) => {
-    const newProduct = {
-      id: Date.now(),
-      ...productData,
-      createdAt: Date.now(),
+  const updateProduct = useCallback(async (id, productData) => {
+    try {
+      setError(null)
+      console.log('✏️ Updating product:', id)
+      
+      const response = await fetch('/.netlify/functions/update-product', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...productData }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const updatedProduct = result.data
+        
+        setProducts((prev) => {
+          const updated = prev.map((p) => (p.id === id ? updatedProduct : p))
+          saveToLocalStorage(updated)
+          return updated
+        })
+        console.log('✅ Product updated in MongoDB')
+        return
+      } else {
+        throw new Error(`API error: ${response.status}`)
+      }
+    } catch (err) {
+      console.warn('⚠️ MongoDB update failed, using localStorage:', err.message)
+      
+      // Fallback: update in localStorage
+      const updatedProduct = { id, ...productData }
+      
+      setProducts((prev) => {
+        const updated = prev.map((p) => (p.id === id ? updatedProduct : p))
+        saveToLocalStorage(updated)
+        return updated
+      })
+      
+      console.log('📂 Product updated in localStorage:', id)
     }
-    const updated = [...products, newProduct]
-    saveProducts(updated)
-    return newProduct
-  }, [products, saveProducts])
+  }, [])
 
-  const updateProduct = useCallback((id, productData) => {
-    const updated = products.map((p) =>
-      p.id === id ? { ...p, ...productData, id: p.id, createdAt: p.createdAt } : p
-    )
-    saveProducts(updated)
-  }, [products, saveProducts])
+  const deleteProduct = useCallback(async (id) => {
+    try {
+      setError(null)
+      console.log('🗑️ Deleting product:', id)
+      
+      const response = await fetch('/.netlify/functions/delete-product', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
 
-  const deleteProduct = useCallback((id) => {
-    const updated = products.filter((p) => p.id !== id)
-    saveProducts(updated)
-  }, [products, saveProducts])
+      if (response.ok) {
+        setProducts((prev) => {
+          const updated = prev.filter((p) => p.id !== id)
+          saveToLocalStorage(updated)
+          return updated
+        })
+        console.log('✅ Product deleted from MongoDB')
+        return
+      } else {
+        throw new Error(`API error: ${response.status}`)
+      }
+    } catch (err) {
+      console.warn('⚠️ MongoDB delete failed, using localStorage:', err.message)
+      
+      // Fallback: delete from localStorage
+      setProducts((prev) => {
+        const updated = prev.filter((p) => p.id !== id)
+        saveToLocalStorage(updated)
+        return updated
+      })
+      
+      console.log('📂 Product deleted from localStorage:', id)
+    }
+  }, [])
 
   const getProductById = useCallback((id) => {
     return products.find((p) => p.id === id)
@@ -72,9 +202,12 @@ export const useProducts = () => {
   return {
     products,
     isLoaded,
+    isLoading,
+    error,
     addProduct,
     updateProduct,
     deleteProduct,
     getProductById,
+    refetch: fetchProducts, // Allow manual refresh
   }
 }

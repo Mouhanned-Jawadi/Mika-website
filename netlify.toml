@@ -7,7 +7,16 @@
   command = "npm run dev"
   port = 3000
 
+# Environment Variables
+[context.production]
+  environment = { MONGODB_URI = "mongodb://mongo:HSFiubXrfbCUKtTTslqtvejkbJKujbnQ@nozomi.proxy.rlwy.net:24744", MONGODB_DB = "queenbags", GMAIL_USER = "mouhanned.jawadi23@gmail.com", GMAIL_PASS = "szyi fhcx jprn eket" }
+
+[context.deploy-preview]
+  environment = { MONGODB_URI = "mongodb://mongo:HSFiubXrfbCUKtTTslqtvejkbJKujbnQ@nozomi.proxy.rlwy.net:24744", MONGODB_DB = "queenbags", GMAIL_USER = "mouhanned.jawadi23@gmail.com", GMAIL_PASS = "szyi fhcx jprn eket" }
+
+# Redirects
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+

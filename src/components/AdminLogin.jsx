@@ -76,12 +76,6 @@ export const AdminLogin = ({ onLogin, logo }) => {
               {isLoading ? 'Logging in...' : 'Login to Admin Panel'}
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-brand-gold/20">
-            <p className="text-xs text-brand-muted text-center">
-              Default credentials for demo: mika@admin.com / mika123
-            </p>
-          </div>
         </div>
       </div>
     </div>

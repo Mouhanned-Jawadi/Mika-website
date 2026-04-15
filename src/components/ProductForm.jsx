@@ -115,22 +115,32 @@ export const ProductForm = ({ product = null, onSave, onCancel }) => {
       return
     }
 
-    if (!formData.instagramLink.trim()) {
+    if (!formData.instagramLink?.trim()) {
       toast.error('❌ Instagram link is required')
       setIsSubmitting(false)
       return
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    onSave(formData)
-    setIsSubmitting(false)
-    setFormData({
-      name: '',
-      price: '',
-      instagramLink: '',
-      images: [],
-    })
+    try {
+      // Wait for the save to complete
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      
+      // Call onSave and wait for it to complete
+      await onSave(formData)
+      
+      // Only reset if save was successful
+      setFormData({
+        name: '',
+        price: '',
+        instagramLink: '',
+        images: [],
+      })
+    } catch (error) {
+      console.error('Error saving product:', error)
+      toast.error('❌ Failed to save product. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
