@@ -1,10 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
 
-// Helper to check if we're in dev mode (without netlify dev)
-const isDevelopmentMode = () => {
-  return !window.location.hostname.includes('netlify')
-}
-
 // Helper to save to local backup
 const saveToLocalStorage = (products) => {
   try {
@@ -67,6 +62,21 @@ export const useProducts = () => {
   // Load products on mount
   useEffect(() => {
     fetchProducts()
+  }, [fetchProducts])
+
+  // Re-fetch every 60 seconds so admin changes are reflected for all users
+  useEffect(() => {
+    const interval = setInterval(fetchProducts, 60000)
+    return () => clearInterval(interval)
+  }, [fetchProducts])
+
+  // Immediately re-fetch when the user returns to the tab
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden) fetchProducts()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [fetchProducts])
 
   const addProduct = useCallback(async (productData) => {
