@@ -11,7 +11,8 @@ import {
 } from 'react-icons/fa'
 import { HiOutlineMail } from 'react-icons/hi'
 
-import logo from './assets/logo_mika.jpg'
+import logo from './assets/logo.png'
+import promoVideo from './assets/pomelli_creative_video_9_16_0429.mp4'
 import prod1 from '../assets/prod1.jpeg'
 import prod2 from '../assets/prod2.jpeg'
 import prod3 from '../assets/prod3.jpeg'
@@ -35,7 +36,7 @@ const products = [
 
 const content = {
   en: {
-    nav: ['Home', 'Gallery', 'Marketplace', 'Contact'],
+    nav: ['Home', 'Video', 'Gallery', 'Marketplace', 'Contact'],
     heroTitle: 'Handmade elegance for every queen.',
     heroText:
       'QueensBags creates feminine handmade bags with premium fabrics, crafted details, and modern silhouettes inspired by your daily rhythm.',
@@ -44,6 +45,8 @@ const content = {
     storyTitle: 'Built by hand, styled with heart.',
     storyText:
       'Every piece is carefully assembled in small batches to keep quality high and each design unique. We blend soft tones, golden accents, and practical layouts for women who love both style and function.',
+    videoTitle: 'Watch Our Craft',
+    videoText: 'See the artistry behind every stitch — handmade with love.',
     galleryTitle: 'Gallery',
     galleryText: 'A curated look at our latest handmade drops.',
     marketTitle: 'Mini Marketplace',
@@ -69,7 +72,7 @@ const content = {
     quickContact: 'Quick contact',
   },
   fr: {
-    nav: ['Accueil', 'Galerie', 'Marche', 'Contact'],
+    nav: ['Accueil', 'Vidéo', 'Galerie', 'Marche', 'Contact'],
     heroTitle: 'Des sacs faits main pour chaque reine.',
     heroText:
       'QueensBags cree des sacs feminins faits main avec des tissus premium, des finitions raffinees et un style moderne.',
@@ -78,6 +81,8 @@ const content = {
     storyTitle: 'Fait a la main, pense avec amour.',
     storyText:
       'Chaque piece est preparee en petite serie pour garder une qualite elevee et un design unique. Un melange de tons doux, de details dores et de praticite.',
+    videoTitle: 'Regardez Notre Art',
+    videoText: 'Découvrez l\'artisanat derrière chaque point — fait main avec amour.',
     galleryTitle: 'Galerie',
     galleryText: 'Une selection de nos creations handmade recentes.',
     marketTitle: 'Mini Marche',
@@ -162,7 +167,7 @@ function App() {
           </a>
 
           <nav className="hidden gap-6 text-sm font-medium md:flex">
-            {['#home', '#gallery', '#marketplace', '#contact'].map((href, i) => (
+            {['#home', '#video', '#gallery', '#marketplace', '#contact'].map((href, i) => (
               <a key={href} href={href} className="nav-link">
                 {t.nav[i]}
               </a>
@@ -181,7 +186,7 @@ function App() {
 
           {/* Mobile nav */}
           <nav className="flex w-full gap-2 overflow-x-auto pb-1 md:hidden">
-            {['#home', '#gallery', '#marketplace', '#contact'].map((href, i) => (
+            {['#home', '#video', '#gallery', '#marketplace', '#contact'].map((href, i) => (
               <a key={href} href={href} className="mobile-nav-link">
                 {t.nav[i]}
               </a>
@@ -243,6 +248,45 @@ function App() {
           <div className="reveal-up mx-auto w-full max-w-5xl rounded-3xl border border-brand-gold/30 bg-gradient-to-r from-white via-brand-blush/40 to-brand-ivory p-8 shadow-soft transition-all duration-300 hover:shadow-glow hover:border-brand-berry/20">
             <h2 className="font-display text-3xl text-brand-ink">{t.storyTitle}</h2>
             <p className="mt-3 text-brand-muted">{t.storyText}</p>
+          </div>
+        </section>
+
+        {/* Video */}
+        <section id="video" className="section-wrap overflow-hidden">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="reveal-up mb-10 text-center">
+              <h2 className="font-display text-3xl text-brand-ink">{t.videoTitle}</h2>
+              <p className="mt-2 text-brand-muted">{t.videoText}</p>
+            </div>
+
+            <div className="flex justify-center">
+              <div className="relative group w-full max-w-xs sm:max-w-sm">
+                {/* Ambient glow */}
+                <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-b from-brand-berry/25 via-brand-gold/15 to-brand-berry/25 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity duration-700 scale-110" />
+
+                {/* Decorative ring */}
+                <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-br from-brand-gold/50 via-brand-berry/30 to-brand-gold/50 opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Video frame */}
+                <div className="relative rounded-[1.75rem] overflow-hidden border-4 border-white/80 shadow-[0_20px_60px_rgba(178,67,102,0.25)] group-hover:shadow-[0_30px_80px_rgba(178,67,102,0.4)] transition-shadow duration-500 aspect-[9/16]">
+                  <video
+                    src={promoVideo}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Subtle top shine */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent pointer-events-none" />
+                </div>
+
+                {/* Floating label */}
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-brand-gold/40 bg-brand-ivory/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-brand-berry shadow-soft backdrop-blur">
+                  QueensBags — Handmade
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
