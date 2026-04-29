@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import {
   FaArrowRight,
@@ -8,12 +8,10 @@ import {
   FaPhoneAlt,
   FaShoppingBag,
   FaWhatsapp,
-  FaShieldAlt,
 } from 'react-icons/fa'
 import { HiOutlineMail } from 'react-icons/hi'
 
 import logo from './assets/logo_mika.jpg'
-import image0 from './assets/image.png'
 import prod1 from '../assets/prod1.jpeg'
 import prod2 from '../assets/prod2.jpeg'
 import prod3 from '../assets/prod3.jpeg'
@@ -21,22 +19,18 @@ import prod4 from '../assets/prod4.jpeg'
 import prod5 from '../assets/prod5.jpeg'
 import prod6 from '../assets/prod6.jpeg'
 
-import { useProducts } from './hooks/useProducts'
-import { AdminLogin } from './components/AdminLogin'
-import { AdminPanel } from './components/AdminPanel'
 import { ProductCarousel } from './components/ProductCarousel'
 
 const instagramUrl = 'https://www.instagram.com/queenbags_mika/?hl=fr'
 const whatsappUrl = 'https://wa.me/21629043226'
 
-// Default products with images from assets
-const defaultProducts = [
-  { id: 1, name: 'Queen #1', images: [prod1], price: '145 TND', instagramLink: instagramUrl },
-  { id: 2, name: 'Queen #2', images: [prod2], price: '125 TND', instagramLink: instagramUrl },
-  { id: 3, name: 'Queen #3', images: [prod3], price: '159 TND', instagramLink: instagramUrl },
-  { id: 4, name: 'Queen #4', images: [prod4], price: '138 TND', instagramLink: instagramUrl },
-  { id: 5, name: 'Queen #5', images: [prod5], price: '149 TND', instagramLink: instagramUrl },
-  { id: 6, name: 'Queen #6', images: [prod6], price: '132 TND', instagramLink: instagramUrl },
+const products = [
+  { id: 1, name: 'Queen #1', images: [prod1], price: '140 TND', instagramLink: instagramUrl },
+  { id: 2, name: 'Queen #2', images: [prod2], price: '140 TND', instagramLink: instagramUrl },
+  { id: 3, name: 'Queen #3', images: [prod3], price: '140 TND', instagramLink: instagramUrl },
+  { id: 4, name: 'Queen #4', images: [prod4], price: '140 TND', instagramLink: instagramUrl },
+  { id: 5, name: 'Queen #5', images: [prod5], price: '140 TND', instagramLink: instagramUrl },
+  { id: 6, name: 'Queen #6', images: [prod6], price: '140 TND', instagramLink: instagramUrl },
 ]
 
 const content = {
@@ -113,44 +107,8 @@ const content = {
 function App() {
   const [lang, setLang] = useState('en')
   const [form, setForm] = useState({ name: '', email: '', message: '' })
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false)
-  const [showAdminLogin, setShowAdminLogin] = useState(false)
-  const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
   const t = useMemo(() => content[lang], [lang])
-  const { products, isLoaded, addProduct, updateProduct, deleteProduct } = useProducts()
-
-  // Handle hash routing for admin panel
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash
-      if (hash === '#admin') {
-        setShowAdminLogin(true)
-        setIsAdminLoggedIn(false)
-      } else {
-        setShowAdminLogin(false)
-      }
-    }
-
-    // Check on mount
-    handleHashChange()
-
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange)
-    return () => window.removeEventListener('hashchange', handleHashChange)
-  }, [])
-
-  const handleAdminLogin = () => {
-    setIsAdminLoggedIn(true)
-    setShowAdminLogin(false)
-  }
-
-  const handleAdminLogout = () => {
-    setIsAdminLoggedIn(false)
-    setShowAdminLogin(false)
-    window.location.hash = ''
-    toast.success('👋 See you soon!')
-  }
 
   const handleOpenInstagram = (link = instagramUrl) => {
     toast.success(t.toast.ig)
@@ -168,207 +126,72 @@ function App() {
     toast.success(t.toast.prefill)
   }
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault()
-    setIsFormSubmitting(true)
 
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       toast.error(t.toast.invalid)
-      setIsFormSubmitting(false)
       return
     }
 
-    try {
-      // Send email to admin
-      await sendContactEmail({
-        name: form.name,
-        email: form.email,
-        message: form.message,
-      })
-
-      // Send confirmation to customer
-      await sendCustomerConfirmation({
-        customerName: form.name,
-        customerEmail: form.email,
-      })
-
-      toast.success(t.toast.sent)
-      setForm({ name: '', email: '', message: '' })
-    } catch (error) {
-      console.error('Error sending email:', error)
-      // Still show success because form was submitted, email will use Netlify Forms fallback
-      toast.success(t.toast.sent)
-      setForm({ name: '', email: '', message: '' })
-    } finally {
-      setIsFormSubmitting(false)
-    }
-  }
-
-  // Email sending functions
-  const sendContactEmail = async (data) => {
-    try {
-      const response = await fetch('/.netlify/functions/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          message: data.message,
-          type: 'admin', // Send to admin
-        }),
-      })
-
-      if (!response.ok) {
-        // If 404 (function not found), show helpful message
-        if (response.status === 404) {
-          console.warn('📧 Email function not available (use "netlify dev" or deploy to Netlify)')
-          console.log('📧 Dev Mode - Email details:', { name: data.name, email: data.email, message: data.message })
-          return { success: true, devMode: true }
-        }
-        throw new Error(`Email service error: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error sending admin email:', error)
-      throw error
-    }
-  }
-
-  const sendCustomerConfirmation = async (data) => {
-    try {
-      const response = await fetch('/.netlify/functions/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: data.customerName,
-          email: data.customerEmail,
-          type: 'confirmation', // Send confirmation to customer
-        }),
-      })
-
-      if (!response.ok) {
-        // If 404, just log it - don't block the flow
-        if (response.status === 404) {
-          console.warn('📧 Email function not available - confirmation not sent')
-          return { success: true, devMode: true }
-        }
-        throw new Error(`Confirmation service error: ${response.status}`)
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error sending confirmation email:', error)
-      // Don't throw - failure is not critical
-    }
-  }
-
-  // Show admin panel if logged in
-  if (isAdminLoggedIn) {
-    return (
-      <>
-        <Toaster position="top-right" toastOptions={{ duration: 2200 }} />
-        <AdminPanel
-          products={products}
-          onAddProduct={addProduct}
-          onUpdateProduct={updateProduct}
-          onDeleteProduct={deleteProduct}
-          onLogout={handleAdminLogout}
-        />
-      </>
+    const subject = encodeURIComponent(`QueensBags - Order from ${form.name}`)
+    const body = encodeURIComponent(
+      `Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}`
     )
-  }
-
-  // Show admin login if trying to access admin
-  if (showAdminLogin) {
-    return (
-      <>
-        <Toaster position="top-right" toastOptions={{ duration: 2200 }} />
-        <AdminLogin onLogin={handleAdminLogin} logo={logo} />
-      </>
-    )
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-ivory">
-        <p className="text-brand-muted">Loading...</p>
-      </div>
-    )
+    window.open(`mailto:queenbags.mika@gmail.com?subject=${subject}&body=${body}`)
+    toast.success(t.toast.sent)
+    setForm({ name: '', email: '', message: '' })
   }
 
   return (
     <div className="min-h-screen bg-brand-ivory text-brand-ink">
       <Toaster position="top-right" toastOptions={{ duration: 2200 }} />
 
+      {/* Header */}
       <header className="sticky top-0 z-30 border-b border-brand-gold/30 bg-brand-ivory/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <a href="#home" className="flex items-center gap-3">
+          <a href="#home" className="flex items-center gap-3 group">
             <img
               src={logo}
               alt="QueensBags logo"
-              className="h-11 w-11 rounded-full border border-brand-gold/50 object-cover"
+              className="h-11 w-11 rounded-full border border-brand-gold/50 object-cover transition duration-300 group-hover:border-brand-berry/60 group-hover:shadow-glow"
             />
-            <span className="font-display text-xl tracking-wide">QueensBags</span>
+            <span className="font-display text-xl tracking-wide transition duration-200 group-hover:text-brand-berry">
+              QueensBags
+            </span>
           </a>
 
           <nav className="hidden gap-6 text-sm font-medium md:flex">
-            <a href="#home" className="nav-link">
-              {t.nav[0]}
-            </a>
-            <a href="#gallery" className="nav-link">
-              {t.nav[1]}
-            </a>
-            <a href="#marketplace" className="nav-link">
-              {t.nav[2]}
-            </a>
-            <a href="#contact" className="nav-link">
-              {t.nav[3]}
-            </a>
+            {['#home', '#gallery', '#marketplace', '#contact'].map((href, i) => (
+              <a key={href} href={href} className="nav-link">
+                {t.nav[i]}
+              </a>
+            ))}
           </nav>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="rounded-full border border-brand-berry/30 bg-white px-3 py-2 text-sm font-semibold text-brand-berry transition hover:-translate-y-0.5 hover:shadow-glow"
-              onClick={() => setLang((prev) => (prev === 'en' ? 'fr' : 'en'))}
-            >
-              <span className="inline-flex items-center gap-2">
-                <FaLanguage /> {lang === 'en' ? 'FR' : 'EN'}
-              </span>
-            </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand-berry/30 bg-white px-3 py-2 text-sm font-semibold text-brand-berry transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-berry hover:text-white hover:shadow-glow"
+            onClick={() => setLang((prev) => (prev === 'en' ? 'fr' : 'en'))}
+          >
+            <span className="inline-flex items-center gap-2">
+              <FaLanguage /> {lang === 'en' ? 'FR' : 'EN'}
+            </span>
+          </button>
 
-            <a
-              href="#admin"
-              className="rounded-full border border-brand-gold/30 bg-white/50 px-3 py-2 text-sm font-semibold text-brand-gold transition hover:-translate-y-0.5 hover:shadow-glow"
-              title="Admin Panel"
-            >
-              <FaShieldAlt />
-            </a>
-          </div>
-
+          {/* Mobile nav */}
           <nav className="flex w-full gap-2 overflow-x-auto pb-1 md:hidden">
-            <a href="#home" className="mobile-nav-link">
-              {t.nav[0]}
-            </a>
-            <a href="#gallery" className="mobile-nav-link">
-              {t.nav[1]}
-            </a>
-            <a href="#marketplace" className="mobile-nav-link">
-              {t.nav[2]}
-            </a>
-            <a href="#contact" className="mobile-nav-link">
-              {t.nav[3]}
-            </a>
+            {['#home', '#gallery', '#marketplace', '#contact'].map((href, i) => (
+              <a key={href} href={href} className="mobile-nav-link">
+                {t.nav[i]}
+              </a>
+            ))}
           </nav>
         </div>
       </header>
 
       <main>
+        {/* Hero */}
         <section id="home" className="relative overflow-hidden px-4 pb-16 pt-14 sm:px-6">
           <div className="hero-blob hero-blob-left" />
           <div className="hero-blob hero-blob-right" />
@@ -384,11 +207,7 @@ function App() {
               <p className="max-w-xl text-brand-muted">{t.heroText}</p>
 
               <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleOpenInstagram()}
-                  className="btn-primary"
-                >
+                <button type="button" onClick={() => handleOpenInstagram()} className="btn-primary">
                   <FaInstagram /> {t.heroPrimary}
                 </button>
                 <a href="#contact" className="btn-secondary">
@@ -398,7 +217,6 @@ function App() {
             </div>
 
             <div className="reveal-up relative mx-auto w-full max-w-md lg:max-w-none flex items-center justify-center">
-              {/* Animated bg blur */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="absolute h-48 w-48 sm:h-64 sm:w-64 rounded-full bg-brand-berry/10 blur-3xl animate-pulse" />
                 <div
@@ -407,62 +225,62 @@ function App() {
                 />
               </div>
 
-              {/* Logo with effects */}
               <div className="relative group">
-                {/* Glow ring effect */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-brand-berry/20 via-brand-gold/20 to-brand-berry/20 blur-xl group-hover:blur-2xl transition duration-500 opacity-75 group-hover:opacity-100" />
-
-                {/* Animated border ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-transparent bg-gradient-to-r from-brand-berry/30 to-brand-gold/30 p-1 opacity-0 group-hover:opacity-100 transition duration-500" />
-
-                {/* Logo */}
                 <img
                   src={logo}
                   alt="QueensBags logo"
                   className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-brand-gold/40 object-cover shadow-soft transition duration-500 group-hover:scale-105 group-hover:border-brand-berry/50"
                 />
-
-                {/* Shine effect on hover */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
               </div>
             </div>
           </div>
         </section>
 
+        {/* Story */}
         <section className="section-wrap">
-          <div className="reveal-up mx-auto w-full max-w-5xl rounded-3xl border border-brand-gold/30 bg-gradient-to-r from-white via-brand-blush/40 to-brand-ivory p-8 shadow-soft">
+          <div className="reveal-up mx-auto w-full max-w-5xl rounded-3xl border border-brand-gold/30 bg-gradient-to-r from-white via-brand-blush/40 to-brand-ivory p-8 shadow-soft transition-all duration-300 hover:shadow-glow hover:border-brand-berry/20">
             <h2 className="font-display text-3xl text-brand-ink">{t.storyTitle}</h2>
             <p className="mt-3 text-brand-muted">{t.storyText}</p>
           </div>
         </section>
 
+        {/* Gallery */}
         <section id="gallery" className="section-wrap">
           <div className="mx-auto w-full max-w-6xl">
-            <div className="reveal-up mb-8 flex items-end justify-between gap-4">
-              <div>
-                <h2 className="font-display text-3xl text-brand-ink">{t.galleryTitle}</h2>
-                <p className="mt-2 text-brand-muted">{t.galleryText}</p>
-              </div>
+            <div className="reveal-up mb-8">
+              <h2 className="font-display text-3xl text-brand-ink">{t.galleryTitle}</h2>
+              <p className="mt-2 text-brand-muted">{t.galleryText}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {products.slice(0, 6).map((item, index) => (
+              {products.map((item, index) => (
                 <article
                   key={item.id}
-                  className="reveal-up group overflow-hidden rounded-3xl border border-brand-gold/30 bg-white"
+                  className="gallery-card group"
                   style={{ animationDelay: `${index * 70}ms` }}
                 >
-                  <ProductCarousel
-                    images={item.images}
-                    alt={item.name}
-                    className="h-72 w-full transition duration-500 group-hover:scale-105"
-                  />
+                  <div className="relative h-72 w-full overflow-hidden rounded-2xl">
+                    <img
+                      src={item.images[0]}
+                      alt={item.name}
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                    />
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-berry/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                    {/* Name label on hover */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                      <span className="font-display text-lg text-white drop-shadow">{item.name}</span>
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
+        {/* Marketplace */}
         <section id="marketplace" className="section-wrap">
           <div className="mx-auto w-full max-w-6xl">
             <div className="reveal-up mb-8">
@@ -471,17 +289,18 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {products.slice(0, 6).map((item) => (
-                <article
-                  key={`market-${item.id}`}
-                  className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-4 shadow-soft"
-                >
+              {products.map((item) => (
+                <article key={`market-${item.id}`} className="market-card group">
                   <div className="h-56 w-full rounded-2xl overflow-hidden">
-                    <ProductCarousel images={item.images} alt={item.name} className="w-full h-full" />
+                    <img
+                      src={item.images[0]}
+                      alt={item.name}
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    />
                   </div>
                   <div className="mt-4 flex items-center justify-between">
                     <h3 className="font-display text-2xl text-brand-ink">{item.name}</h3>
-                    <span className="rounded-full bg-brand-blush px-3 py-1 text-xs font-semibold text-brand-berry">
+                    <span className="price-badge transition-all duration-300 group-hover:bg-brand-berry group-hover:text-white">
                       {item.price}
                     </span>
                   </div>
@@ -508,9 +327,10 @@ function App() {
           </div>
         </section>
 
+        {/* Contact */}
         <section id="contact" className="section-wrap pb-20">
           <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[1fr_1.1fr]">
-            <div className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-6 shadow-soft">
+            <div className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-6 shadow-soft transition-all duration-300 hover:border-brand-gold/60 hover:shadow-glow">
               <h2 className="font-display text-3xl text-brand-ink">{t.contactTitle}</h2>
               <p className="mt-2 text-brand-muted">{t.contactText}</p>
 
@@ -518,24 +338,28 @@ function App() {
                 {t.quickContact}
               </h3>
               <div className="mt-4 grid gap-3 text-sm">
-                <a className="quick-link" href={instagramUrl} target="_blank" rel="noreferrer">
-                  <FaInstagram /> Instagram
+                <a className="quick-link group" href={instagramUrl} target="_blank" rel="noreferrer">
+                  <FaInstagram className="transition-transform duration-200 group-hover:scale-110" />
+                  Instagram
                 </a>
-                <a className="quick-link" href={whatsappUrl} target="_blank" rel="noreferrer">
-                  <FaWhatsapp /> WhatsApp
+                <a className="quick-link group" href={whatsappUrl} target="_blank" rel="noreferrer">
+                  <FaWhatsapp className="transition-transform duration-200 group-hover:scale-110" />
+                  WhatsApp
                 </a>
-                <a className="quick-link" href="mailto:queenbags.mika@gmail.com">
-                  <HiOutlineMail /> queenbags.mika@gmail.com
+                <a className="quick-link group" href="mailto:queenbags.mika@gmail.com">
+                  <HiOutlineMail className="transition-transform duration-200 group-hover:scale-110" />
+                  queenbags.mika@gmail.com
                 </a>
-                <a className="quick-link" href="tel:+216-29043226">
-                  <FaPhoneAlt /> +216-29043226
+                <a className="quick-link group" href="tel:+216-29043226">
+                  <FaPhoneAlt className="transition-transform duration-200 group-hover:scale-110" />
+                  +216-29043226
                 </a>
               </div>
             </div>
 
             <form
               onSubmit={handleSubmit}
-              className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-6 shadow-soft"
+              className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-6 shadow-soft transition-all duration-300 hover:border-brand-gold/60"
             >
               <div className="grid gap-4">
                 <label className="label-block">
@@ -543,10 +367,9 @@ function App() {
                   <input
                     type="text"
                     value={form.name}
-                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                    onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                     className="input-field"
                     placeholder="Sara Queen"
-                    disabled={isFormSubmitting}
                   />
                 </label>
 
@@ -555,10 +378,9 @@ function App() {
                   <input
                     type="email"
                     value={form.email}
-                    onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                     className="input-field"
                     placeholder="name@email.com"
-                    disabled={isFormSubmitting}
                   />
                 </label>
 
@@ -566,15 +388,14 @@ function App() {
                   <span>{t.labels.message}</span>
                   <textarea
                     value={form.message}
-                    onChange={(event) => setForm((prev) => ({ ...prev, message: event.target.value }))}
+                    onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
                     className="input-field min-h-32"
                     placeholder="Queen #2 in berry with gold strap"
-                    disabled={isFormSubmitting}
                   />
                 </label>
 
-                <button type="submit" className="btn-primary !justify-center" disabled={isFormSubmitting}>
-                  {isFormSubmitting ? 'Sending...' : <><FaShoppingBag /> {t.labels.send}</>}
+                <button type="submit" className="btn-primary !justify-center">
+                  <FaShoppingBag /> {t.labels.send}
                 </button>
               </div>
             </form>
@@ -583,7 +404,9 @@ function App() {
       </main>
 
       <footer className="border-t border-brand-gold/30 bg-white/60 px-4 py-5 text-center text-sm text-brand-muted sm:px-6">
-        QueensBags - Handmade feminine bags for modern queens.
+        <span className="transition-colors duration-200 hover:text-brand-berry cursor-default">
+          QueensBags — Handmade feminine bags for modern queens.
+        </span>
       </footer>
     </div>
   )
