@@ -138,6 +138,11 @@
   }
 }
 
+@keyframes carousel-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
 @media (max-width: 640px) {
   .reveal-up {
     animation-duration: 520ms;

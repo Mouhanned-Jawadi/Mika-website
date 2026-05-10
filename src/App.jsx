@@ -21,16 +21,17 @@ import prod5 from '../assets/prod5.jpeg'
 import prod6 from '../assets/prod6.jpeg'
 
 import { ProductCarousel } from './components/ProductCarousel'
+import { ImageCarousel } from './components/ImageCarousel'
 
 const instagramUrl = 'https://www.instagram.com/queenbags_mika/?hl=fr'
 const whatsappUrl = 'https://wa.me/21629043226'
 
 const products = [
-  { id: 1, name: 'Queen #1', images: [prod1], price: '140 TND', instagramLink: instagramUrl },
-  { id: 2, name: 'Queen #2', images: [prod2], price: '140 TND', instagramLink: instagramUrl },
-  { id: 3, name: 'Queen #3', images: [prod3], price: '140 TND', instagramLink: instagramUrl },
-  { id: 4, name: 'Queen #4', images: [prod4], price: '140 TND', instagramLink: instagramUrl },
-  { id: 5, name: 'Queen #5', images: [prod5], price: '140 TND', instagramLink: instagramUrl },
+  { id: 1, name: 'Queen #1', images: [prod1], price: '95 TND', instagramLink: instagramUrl },
+  { id: 2, name: 'Queen #2', images: [prod2], price: '95 TND', instagramLink: instagramUrl },
+  { id: 3, name: 'Queen #3', images: [prod3], price: '160 TND', instagramLink: instagramUrl },
+  { id: 4, name: 'Queen #4', images: [prod4], price: '160 TND', instagramLink: instagramUrl },
+  { id: 5, name: 'Queen #5', images: [prod5], price: '90 TND', instagramLink: instagramUrl },
   { id: 6, name: 'Queen #6', images: [prod6], price: '140 TND', instagramLink: instagramUrl },
 ]
 
@@ -70,6 +71,8 @@ const content = {
       sent: 'Thanks! Your request was sent. We will review shortly and answer as fast as possible!',
     },
     quickContact: 'Quick contact',
+    momentsTitle: 'Behind the Craft',
+    momentsText: 'Snapshots from our world — every detail, every mood, every queen.',
   },
   fr: {
     nav: ['Accueil', 'Vidéo', 'Galerie', 'Marche', 'Contact'],
@@ -106,6 +109,8 @@ const content = {
       sent: 'Merci! Votre demande a bien ete envoyee. Nous examinerons rapidement et repondrons au plus vite!',
     },
     quickContact: 'Contact rapide',
+    momentsTitle: 'Dans les Coulisses',
+    momentsText: 'Instants de notre univers — chaque detail, chaque moment, chaque reine.',
   },
 }
 
@@ -250,6 +255,9 @@ function App() {
             <p className="mt-3 text-brand-muted">{t.storyText}</p>
           </div>
         </section>
+
+        {/* Image Carousel */}
+        <ImageCarousel title={t.momentsTitle} subtitle={t.momentsText} />
 
         {/* Video */}
         <section id="video" className="section-wrap overflow-hidden">
