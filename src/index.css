@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -151,4 +151,33 @@
   #home h1 {
     line-height: 1.15;
   }
+}
+
+/* ── Arabic / RTL support ────────────────────────────── */
+[dir="rtl"] body {
+  font-family: 'Cairo', sans-serif;
+}
+
+[dir="rtl"] .font-display,
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+}
+
+/* Fix nav-link underline direction */
+[dir="rtl"] .nav-link::after {
+  left: auto;
+  right: 0;
+}
+
+/* Fix btn-primary shimmer direction */
+[dir="rtl"] .btn-primary::before {
+  left: auto;
+  right: -75%;
+}
+[dir="rtl"] .btn-primary:hover::before {
+  left: auto;
+  right: 125%;
 }

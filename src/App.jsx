@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import {
   FaArrowRight,
   FaHeart,
   FaInstagram,
-  FaLanguage,
   FaPhoneAlt,
   FaShoppingBag,
   FaWhatsapp,
@@ -112,6 +111,44 @@ const content = {
     momentsTitle: 'Dans les Coulisses',
     momentsText: 'Instants de notre univers — chaque detail, chaque moment, chaque reine.',
   },
+  ar: {
+    nav: ['الرئيسية', 'فيديو', 'المعرض', 'المتجر', 'تواصلي'],
+    heroTitle: 'أناقة يدوية لكل ملكة.',
+    heroText:
+      'كوينز باغز تصنع حقائب نسائية يدوية بأقمشة فاخرة، تفاصيل مُتقنة، وتصاميم عصرية مستوحاة من إيقاع يومك.',
+    heroPrimary: 'تسوقي على إنستغرام',
+    heroSecondary: 'اطلبي تصميماً خاصاً',
+    storyTitle: 'صُنعت بالأيدي، وصُمّمت بالقلب.',
+    storyText:
+      'كل قطعة تُجمَّع بعناية في دفعات صغيرة للحفاظ على جودة عالية وتميّز فريد في كل تصميم. نمزج بين الألوان الناعمة، والتفاصيل الذهبية، والتصميمات العملية للمرأة التي تُحب الأناقة والوظيفة معاً.',
+    videoTitle: 'شاهدي حرفتنا',
+    videoText: 'اكتشفي الإبداع خلف كل غرزة — صُنعت يدوياً بكل حب.',
+    galleryTitle: 'المعرض',
+    galleryText: 'نظرة منتقاة على أحدث تصاميمنا اليدوية.',
+    marketTitle: 'المتجر الصغير',
+    marketText:
+      'تصفحي قطعنا المميزة. للطلب، تواصلي عبر إنستغرام أو أرسلي طلبك المخصص من خلال نموذج التواصل.',
+    marketPrimary: 'اطلبي عبر إنستغرام',
+    marketSecondary: 'استخدمي نموذج التواصل',
+    contactTitle: 'تواصلي مع كوينز باغز',
+    contactText:
+      'أرسلي طلبك المخصص وسنردّ عليكِ بالألوان المتاحة وتفاصيل التسليم.',
+    labels: {
+      name: 'الاسم الكامل',
+      email: 'البريد الإلكتروني',
+      message: 'طلبك',
+      send: 'أرسلي الطلب',
+    },
+    toast: {
+      ig: 'فتح إنستغرام لطلبك.',
+      prefill: 'تم تجهيز الطلب في نموذج التواصل.',
+      invalid: 'يرجى تعبئة جميع حقول النموذج.',
+      sent: 'شكراً! تم إرسال طلبك. سنراجعه ونردّ عليكِ في أقرب وقت!',
+    },
+    quickContact: 'تواصل سريع',
+    momentsTitle: 'خلف الحرفة',
+    momentsText: 'لقطات من عالمنا — كل تفصيل، كل أجواء، كل ملكة.',
+  },
 }
 
 function App() {
@@ -119,6 +156,11 @@ function App() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
 
   const t = useMemo(() => content[lang], [lang])
+
+  useEffect(() => {
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.lang = lang
+  }, [lang])
 
   const handleOpenInstagram = (link = instagramUrl) => {
     toast.success(t.toast.ig)
@@ -129,6 +171,8 @@ function App() {
     const nextMessage =
       lang === 'fr'
         ? `Bonjour QueensBags, je veux commander le modele: ${productName}`
+        : lang === 'ar'
+        ? `مرحباً كوينز باغز، أريد طلب الموديل: ${productName}`
         : `Hello QueensBags, I want to order the model: ${productName}`
 
     setForm((prev) => ({ ...prev, message: nextMessage }))
@@ -179,15 +223,26 @@ function App() {
             ))}
           </nav>
 
-          <button
-            type="button"
-            className="rounded-full border border-brand-berry/30 bg-white px-3 py-2 text-sm font-semibold text-brand-berry transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-berry hover:text-white hover:shadow-glow"
-            onClick={() => setLang((prev) => (prev === 'en' ? 'fr' : 'en'))}
-          >
-            <span className="inline-flex items-center gap-2">
-              <FaLanguage /> {lang === 'en' ? 'FR' : 'EN'}
-            </span>
-          </button>
+          <div className="flex items-center gap-0.5 rounded-full border border-brand-berry/30 bg-white p-1">
+            {[
+              { code: 'en', label: 'EN' },
+              { code: 'fr', label: 'FR' },
+              { code: 'ar', label: 'ع' },
+            ].map(({ code, label }) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLang(code)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
+                  lang === code
+                    ? 'bg-brand-berry text-white shadow-sm'
+                    : 'text-brand-berry hover:bg-brand-berry/10'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
           {/* Mobile nav */}
           <nav className="flex w-full gap-2 overflow-x-auto pb-1 md:hidden">
