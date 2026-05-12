@@ -24,7 +24,7 @@ import { ProductCarousel } from './components/ProductCarousel'
 import { ImageCarousel } from './components/ImageCarousel'
 
 const instagramUrl = 'https://www.instagram.com/queenbags_mika/?hl=fr'
-const whatsappUrl = 'https://wa.me/21629043226'
+const whatsappUrl = 'https://wa.me/21699077729'
 
 const products = [
   { id: 1, name: 'Queen #1', images: [prod1], price: '95 TND', instagramLink: instagramUrl },
@@ -402,9 +402,9 @@ function App() {
                   <HiOutlineMail className="transition-transform duration-200 group-hover:scale-110" />
                   queenbags.mika@gmail.com
                 </a>
-                <a className="quick-link group" href="tel:+216-29043226">
+                <a className="quick-link group" href="tel:+216-99077729">
                   <FaPhoneAlt className="transition-transform duration-200 group-hover:scale-110" />
-                  +216-29043226
+                  +216-99077729
                 </a>
               </div>
             </div>
