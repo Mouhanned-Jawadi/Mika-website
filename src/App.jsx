@@ -115,7 +115,7 @@ const content = {
     nav: ['الرئيسية', 'فيديو', 'المعرض', 'المتجر', 'تواصلي'],
     heroTitle: 'أناقة يدوية لكل ملكة.',
     heroText:
-      'كوينز باغز تصنع حقائب نسائية يدوية بأقمشة فاخرة، تفاصيل مُتقنة، وتصاميم عصرية مستوحاة من إيقاع يومك.',
+      'ميكا تصنع حقائب نسائية يدوية بأقمشة فاخرة، تفاصيل مُتقنة، وتصاميم عصرية مستوحاة من إيقاع يومك.',
     heroPrimary: 'تسوقي على إنستغرام',
     heroSecondary: 'اطلبي تصميماً خاصاً',
     storyTitle: 'صُنعت بالأيدي، وصُمّمت بالقلب.',
@@ -130,7 +130,7 @@ const content = {
       'تصفحي قطعنا المميزة. للطلب، تواصلي عبر إنستغرام أو أرسلي طلبك المخصص من خلال نموذج التواصل.',
     marketPrimary: 'اطلبي عبر إنستغرام',
     marketSecondary: 'استخدمي نموذج التواصل',
-    contactTitle: 'تواصلي مع كوينز باغز',
+    contactTitle: 'تواصلي مع ميكا',
     contactText:
       'أرسلي طلبك المخصص وسنردّ عليكِ بالألوان المتاحة وتفاصيل التسليم.',
     labels: {
@@ -148,6 +148,18 @@ const content = {
     quickContact: 'تواصل سريع',
     momentsTitle: 'خلف الحرفة',
     momentsText: 'لقطات من عالمنا — كل تفصيل، كل أجواء، كل ملكة.',
+    promoTagline: '👜 لأن الأناقة تبدأ من التفاصيل… وميكا تصنع لكِ التميز بكل حب وإبداع 💎',
+    promoDaughter: 'دلّلي ابنتكِ بحقيبة من تصميم ميكا للابتكار — لمسة من الأناقة، جودة في التصميم، وإبداع يرافقها في كل خطوة 💖🌸',
+    promoTitle: '✨ في عالم الأناقة… التفاصيل تصنع الفرق',
+    promoSubtitle: 'ومع ميكا للابتكار، كل تفصيلة تحكي قصة جمال وإبداع',
+    promoFeatures: [
+      '👜 حقائب نسائية بتصاميم عصرية',
+      '💎 جودة عالية ولمسة راقية',
+      '🌸 ألوان جذابة تناسب كل الأذواق',
+    ],
+    promoBody: 'سواء كنتِ تبحثين عن الأناقة اليومية أو عن لمسة مميزة لمناسباتك… ميكا هي اختيارك الأمثل',
+    promoSlogan: '💫 ميكا للابتكار… حقيبتك… هويتك… وأناقتك',
+    promoCTA: '📞 اطلبِي الآن وكوني مختلفة',
   },
 }
 
@@ -172,7 +184,7 @@ function App() {
       lang === 'fr'
         ? `Bonjour QueensBags, je veux commander le modele: ${productName}`
         : lang === 'ar'
-        ? `مرحباً كوينز باغز، أريد طلب الموديل: ${productName}`
+        ? `مرحباً ميكا، أريد طلب الموديل: ${productName}`
         : `Hello QueensBags, I want to order the model: ${productName}`
 
     setForm((prev) => ({ ...prev, message: nextMessage }))
@@ -310,6 +322,36 @@ function App() {
             <p className="mt-3 text-brand-muted">{t.storyText}</p>
           </div>
         </section>
+
+        {/* Promo Banner — Arabic only */}
+        {lang === 'ar' && (
+          <section className="section-wrap">
+            <div className="mx-auto w-full max-w-5xl space-y-6">
+              <div className="reveal-up rounded-3xl border border-brand-berry/30 bg-gradient-to-br from-brand-blush/60 via-white to-brand-ivory p-8 shadow-soft text-center">
+                <p className="text-lg font-semibold text-brand-berry mb-2">{t.promoTagline}</p>
+                <p className="text-brand-muted">{t.promoDaughter}</p>
+              </div>
+
+              <div className="reveal-up rounded-3xl border border-brand-gold/30 bg-white p-8 shadow-soft">
+                <h2 className="font-display text-2xl text-brand-ink mb-1">{t.promoTitle}</h2>
+                <p className="text-brand-muted mb-6">{t.promoSubtitle}</p>
+
+                <ul className="space-y-2 mb-6">
+                  {t.promoFeatures.map((f) => (
+                    <li key={f} className="text-brand-ink font-medium">{f}</li>
+                  ))}
+                </ul>
+
+                <p className="text-brand-muted mb-4">{t.promoBody}</p>
+                <p className="font-semibold text-brand-berry mb-4">{t.promoSlogan}</p>
+
+                <a href="#contact" className="btn-primary inline-flex">
+                  {t.promoCTA}
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Image Carousel */}
         <ImageCarousel title={t.momentsTitle} subtitle={t.momentsText} />
